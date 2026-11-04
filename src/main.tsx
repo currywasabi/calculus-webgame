@@ -8,10 +8,11 @@ import '@fontsource/nanum-myeongjo/700.css'
 import '@fontsource/nanum-myeongjo/800.css'
 import './styles/tokens.css'
 import './styles/app.css'
-import { PuzzleScreen } from './ui/puzzle/PuzzleScreen'
+import './styles/intro.css'
+import { App } from './ui/App'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <PuzzleScreen />
+    <App />
   </StrictMode>,
 )

@@ -1,0 +1,7 @@
+/* 인트로: 테마와 무관하게 검은 화면 */
+.intro{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3rem;padding:1.5rem max(16px,env(safe-area-inset-right,0px)) 4rem max(16px,env(safe-area-inset-left,0px));background:#000;color:#f2f2ee;color-scheme:dark}
+.intro-title{margin:0;flex:1;display:flex;align-items:center;max-width:100%;font-weight:400;font-size:clamp(1.25rem,6.2vw,3.6rem)}
+.intro-title mjx-container{max-width:100%;overflow-x:auto;overflow-y:hidden}
+.intro-start{font-family:var(--serif);font-size:1.05rem;letter-spacing:.32em;text-transform:uppercase;padding:.7rem 1.6rem .7rem calc(1.6rem + .32em);background:transparent;color:inherit;border:1px solid currentColor;border-radius:2px;cursor:pointer}
+.intro-start:hover{background:#f2f2ee;color:#000}
+.intro-start:focus-visible{outline:2px solid #f2f2ee;outline-offset:4px}

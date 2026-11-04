@@ -28,13 +28,20 @@ src/
     math/      수식 트리, 복소수, 2D 파서, 수치 평가, 재작성 엔진, LaTeX
     puzzle/    조각 정의, 판 기하, 힌트, 계산(풀이 줄 만들기)
   data/        퍼즐 JSON, Zod 스키마, 정답 배치 검사
-  state/       Zustand 스토어
-  platform/    저장소 인터페이스와 웹(localStorage) 구현
+  state/       Zustand 스토어 (퍼즐 진행 store.ts, 화면 전환 scene.ts)
+  platform/    저장소·화면 경로 인터페이스와 웹 구현 (localStorage, URL 해시)
   ui/          React 컴포넌트, MathJax 래퍼
+    scenes/    최상위 화면 레지스트리 (인트로, 퍼즐)
   styles/      원본 색상 토큰과 스타일
 tools/         validate-puzzles.ts
 tests/
 ```
+
+## 새 화면 추가
+
+1. `src/state/scene.ts`의 `SCENES`에 id와 URL 경로를 추가한다 (예: `levels: { route: 'levels' }` → `#/levels`).
+2. `src/ui/scenes/index.ts`의 `SCENE_VIEWS`에 컴포넌트를 등록한다.
+3. 화면 이동은 `sceneStore.getState().go('levels')`. 브라우저 뒤로 가기도 동작한다.
 
 ## 새 레벨 추가
 
