@@ -46,12 +46,24 @@ describe('배치', () => {
 
   test('드래그: 유효한 자리 / 판 밖 / 판 안의 잘못된 자리', () => {
     const { s } = make()
-    s().dropPiece('a', { x: 5, y: 2, valid: true, over: true })
+    s().dropPiece('a', { plan: { slot: [5, 2] }, over: true })
     expect(s().place.a).toEqual([5, 2])
-    s().dropPiece('a', { x: 11, y: 7, valid: false, over: true })
+    s().dropPiece('a', { plan: null, over: true })
     expect(s().place.a).toEqual([5, 2])
-    s().dropPiece('a', { x: 20, y: 20, valid: false, over: false })
+    s().dropPiece('a', { plan: null, over: false })
     expect(s().place.a).toBeUndefined()
+  })
+
+  test('드래그: 자리 맞바꾸기는 밀려난 조각을 옮기고 미끄러짐 신호를 낸다', () => {
+    const { s } = make()
+    s().loadLevel(0, { a: [1, 3], c: [5, 3] })
+    s().dropPiece('a', { plan: { slot: [5, 3], swap: { id: 'c', slot: [1, 3] } }, over: true })
+    expect(s().place).toEqual({ a: [5, 3], c: [1, 3] })
+    expect(s().slide).toEqual({ id: 'c', n: 1 })
+    // 트레이에서 온 조각과 맞바꾸면 밀려난 조각은 트레이로 (미끄러짐 없음)
+    s().dropPiece('b', { plan: { slot: [5, 3], swap: { id: 'a', slot: null } }, over: true })
+    expect(s().place).toEqual({ b: [5, 3], c: [1, 3] })
+    expect(s().slide).toEqual({ id: 'c', n: 1 })
   })
 
   test('초기화는 배치와 힌트를 지운다', () => {

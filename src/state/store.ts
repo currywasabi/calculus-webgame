@@ -1,4 +1,5 @@
 import { createStore } from 'zustand/vanilla'
+import { applyDrop, type DropPlan } from '../core/puzzle/drop'
 import { autoPlace, COLS, ROWS, type Placement } from '../core/puzzle/geometry'
 import { hintStep } from '../core/puzzle/hint'
 import type { Level } from '../core/puzzle/pieces'
@@ -7,8 +8,8 @@ import type { SaveStorage } from '../platform/storage'
 
 export { COLS, ROWS }
 
-/** 드래그를 놓은 자리 (UI의 snapAt 결과) */
-export type Drop = { x: number; y: number; valid: boolean; over: boolean }
+/** 드래그를 놓은 결과 (UI의 snapAt): plan은 놓을 수 있을 때의 자리, over는 포인터가 판 위인지 */
+export type Drop = { plan: DropPlan | null; over: boolean }
 
 export type GameState = {
   li: number
@@ -25,6 +26,8 @@ export type GameState = {
   /** 연출 신호. n이 바뀔 때마다 한 번 재생한다. */
   bad: { ids: string[]; n: number } | null
   flash: { id: string; n: number } | null
+  /** 자리 맞바꾸기로 밀려나 미끄러지는 조각 */
+  slide: { id: string; n: number } | null
   shake: number
 }
 
@@ -32,7 +35,7 @@ export type GameActions = {
   loadLevel(k: number, place?: Placement): void
   /** 탭: 판 위 조각은 트레이로, 트레이 조각은 기준선 행의 빈자리로 */
   tapPiece(id: string): void
-  /** 드래그 놓기: 유효하면 그 자리, 판 밖이면 트레이, 판 안의 잘못된 자리면 그대로 */
+  /** 드래그 놓기: 유효하면 그 자리(첨자 크기·자리 맞바꾸기 포함), 판 밖이면 트레이, 판 안의 잘못된 자리면 그대로 */
   dropPiece(id: string, drop: Drop | null): void
   reset(): void
   requestHint(): void
@@ -66,6 +69,7 @@ export function createGameStore(levels: Level[], storage: SaveStorage, random: (
       derivation: null,
       bad: null,
       flash: null,
+      slide: null,
       shake: 0,
 
       loadLevel(k, place) {
@@ -82,10 +86,14 @@ export function createGameStore(levels: Level[], storage: SaveStorage, random: (
       dropPiece(id, drop) {
         const s = get()
         if (s.busy || !drop) return
-        const place = { ...s.place }
-        if (drop.valid) place[id] = [drop.x, drop.y]
-        else if (!drop.over) delete place[id]
-        set({ place })
+        if (drop.plan) {
+          const { swap } = drop.plan
+          set({ place: applyDrop(s.place, id, drop.plan), slide: swap?.slot ? { id: swap.id, n: (s.slide?.n ?? 0) + 1 } : s.slide })
+        } else if (!drop.over) {
+          const place = { ...s.place }
+          delete place[id]
+          set({ place })
+        }
       },
       reset() {
         if (get().busy) return

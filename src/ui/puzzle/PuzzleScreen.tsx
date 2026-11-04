@@ -1,10 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { COLS } from '../../core/puzzle/geometry'
 import { gameStore, LEVELS, useGame } from '../game'
 import { MathSvg } from '../math/MathSvg'
 import { Board } from './Board'
-import { Piece } from './Piece'
+import { Ghost } from './Ghost'
 import { Tray } from './Tray'
 import { usePieceDrag } from './usePieceDrag'
 
@@ -87,10 +86,7 @@ export function PuzzleScreen() {
         <button className="eq" aria-label="계산" onClick={() => act.solve()}>=</button>
       </div>
 
-      {drag && dragDef && createPortal(
-        <Piece def={dragDef} cell={cell} className="ghost" style={{ transform: `translate(${drag.px}px,${drag.py}px)` }} />,
-        document.body,
-      )}
+      {drag && dragDef && <Ghost key={drag.id} def={dragDef} form={drag.snap?.plan?.slot[2]} cell={cell} px={drag.px} py={drag.py} />}
     </main>
   )
 }

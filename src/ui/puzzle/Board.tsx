@@ -1,5 +1,5 @@
 import { useEffect, useState, type PointerEvent, type RefObject } from 'react'
-import { absCells, COLS, edges, ROWS } from '../../core/puzzle/geometry'
+import { absCells, COLS, edges, ROWS, slotDef } from '../../core/puzzle/geometry'
 import type { Cell, Level } from '../../core/puzzle/pieces'
 import { useGame } from '../game'
 import { Derivation } from './Derivation'
@@ -20,6 +20,7 @@ export function Board({ level: L, cell, boardRef, drag, onPointerDown }: Props) 
   const derivation = useGame(s => s.derivation)
   const bad = useGame(s => s.bad)
   const flash = useGame(s => s.flash)
+  const slide = useGame(s => s.slide)
 
   // 에러 조각은 1.8초 동안 색 반전
   const [expired, setExpired] = useState(0)
@@ -30,6 +31,15 @@ export function Board({ level: L, cell, boardRef, drag, onPointerDown }: Props) 
   }, [bad])
   const badIds = bad && bad.n !== expired ? bad.ids : []
 
+  // 자리 맞바꾸기로 밀려난 조각은 새 자리로 미끄러진다
+  const [slid, setSlid] = useState(0)
+  useEffect(() => {
+    if (!slide) return
+    const t = setTimeout(() => setSlid(slide.n), 300)
+    return () => clearTimeout(t)
+  }, [slide])
+  const slideId = slide && slide.n !== slid ? slide.id : null
+
   const W = COLS * cell, H = ROWS * cell
   const onboard = L.pieces.filter(d => place[d.id])
   // 흐려지는 순서: 왼쪽부터
@@ -38,13 +48,14 @@ export function Board({ level: L, cell, boardRef, drag, onPointerDown }: Props) 
   let sil = ''
   if (hint >= 1) {
     const cells: Cell[] = []
-    for (const d of L.pieces) cells.push(...absCells(d, ...L.sol[d.id]))
+    for (const d of L.pieces) { const s = L.sol[d.id]; cells.push(...absCells(slotDef(d, s), s[0], s[1])) }
     const { o, f } = edges(cells, cell)
     sil = f + `<path d="${o}"/>`
   }
   let prev = ''
-  if (drag?.snap?.valid) {
-    const { o, f } = edges(absCells(drag.snap.d, drag.snap.x, drag.snap.y), cell)
+  const plan = drag?.snap?.plan
+  if (drag && plan) {
+    const { o, f } = edges(absCells(slotDef(L.pieces.find(d => d.id === drag.id)!, plan.slot), plan.slot[0], plan.slot[1]), cell)
     prev = f + `<path d="${o}"/>`
   }
 
@@ -62,10 +73,11 @@ export function Board({ level: L, cell, boardRef, drag, onPointerDown }: Props) 
             if (badIds.includes(d.id)) cls.push('bad')
             if (flash?.id === d.id) cls.push('flash')
             if (derivation) cls.push('melt')
+            if (slideId === d.id) cls.push('slide')
             return (
               <Piece
                 key={`${d.id}:${flash?.id === d.id ? flash.n : 0}`}
-                def={d}
+                def={slotDef(d, place[d.id])}
                 cell={cell}
                 className={cls.join(' ')}
                 style={{

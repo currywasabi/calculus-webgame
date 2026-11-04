@@ -2,7 +2,10 @@ import { z } from 'zod'
 import { buildPiece, type Level } from '../core/puzzle/pieces'
 
 const id = z.string().min(1)
-const cell = z.tuple([z.number().int(), z.number().int()])
+const slot = z.union([
+  z.tuple([z.number().int(), z.number().int()]),
+  z.tuple([z.number().int(), z.number().int(), z.literal('script')]),
+])
 
 export const pieceSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('num'), id, v: z.number().int() }),
@@ -25,7 +28,7 @@ export const levelSchema = z.strictObject({
   goal: z.strictObject({ tex: z.string().min(1), value: z.number() }),
   notes: z.array(noteSchema),
   pieces: z.array(pieceSchema).min(1),
-  sol: z.record(id, cell),
+  sol: z.record(id, slot),
 }).superRefine((l, ctx) => {
   const ids = l.pieces.map(p => p.id)
   if (new Set(ids).size !== ids.length) ctx.addIssue({ code: 'custom', path: ['pieces'], message: '조각 id가 겹친다.' })
