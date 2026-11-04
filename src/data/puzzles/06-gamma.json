@@ -1,0 +1,23 @@
+{
+  "title": "감마함수",
+  "goal": {"tex": "120", "value": 120},
+  "notes": [
+    {"kind": "정리", "tex": "\\Gamma(n) = (n-1)!"}
+  ],
+  "pieces": [
+    {"type": "gamma", "id": "a"},
+    {"type": "lp", "id": "b"},
+    {"type": "num", "id": "c", "v": 3},
+    {"type": "op", "id": "d", "op": "+"},
+    {"type": "num", "id": "f", "v": 3},
+    {"type": "rp", "id": "g"}
+  ],
+  "sol": {
+    "a": [1, 3],
+    "b": [3, 3],
+    "c": [4, 3],
+    "d": [6, 4],
+    "f": [7, 3],
+    "g": [9, 3]
+  }
+}

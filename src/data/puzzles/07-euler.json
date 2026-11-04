@@ -1,0 +1,21 @@
+{
+  "title": "오일러 등식",
+  "goal": {"tex": "0", "value": 0},
+  "notes": [
+    {"kind": "정리", "tex": "e^{i\\pi} = -1"}
+  ],
+  "pieces": [
+    {"type": "const", "id": "a", "c": "e"},
+    {"type": "const", "id": "b", "c": "i"},
+    {"type": "const", "id": "c", "c": "π"},
+    {"type": "op", "id": "d", "op": "+"},
+    {"type": "num", "id": "f", "v": 1}
+  ],
+  "sol": {
+    "a": [2, 3],
+    "b": [4, 1],
+    "c": [6, 1],
+    "d": [8, 4],
+    "f": [9, 3]
+  }
+}

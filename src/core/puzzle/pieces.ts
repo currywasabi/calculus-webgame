@@ -52,6 +52,33 @@ export const P = {
   dx: (id: string): PieceDef => ({ id, kind: 'dx', tex: 'dx', w: 2, h: 3, axis: 1, em: 1.3 }),
 }
 
+/** 퍼즐 JSON의 선언형 조각: { "type": "num", "id": "a", "v": 3 } */
+export type PieceSpec =
+  | { type: 'num'; id: string; v: number }
+  | { type: 'const'; id: string; c: ConstName }
+  | { type: 'op'; id: string; op: OpSymbol }
+  | { type: 'frac'; id: string; w: number }
+  | { type: 'sqrt'; id: string; w: number; h: number }
+  | { type: 'inf'; id: string; sign: number }
+  | { type: 'lp' | 'rp' | 'gamma' | 'int' | 'negsq' | 'dx'; id: string }
+
+export function buildPiece(s: PieceSpec): PieceDef {
+  switch (s.type) {
+    case 'num': return P.num(s.id, s.v)
+    case 'const': return P.con(s.id, s.c)
+    case 'op': return P.op(s.id, s.op)
+    case 'frac': return P.frac(s.id, s.w)
+    case 'sqrt': return P.sqrt(s.id, s.w, s.h)
+    case 'inf': return P.inf(s.id, s.sign)
+    case 'lp': return P.lp(s.id)
+    case 'rp': return P.rp(s.id)
+    case 'gamma': return P.gamma(s.id)
+    case 'int': return P.int(s.id)
+    case 'negsq': return P.nsq(s.id)
+    case 'dx': return P.dx(s.id)
+  }
+}
+
 export type Note = { kind: string; text?: string; tex?: string }
 
 export type Level = {
