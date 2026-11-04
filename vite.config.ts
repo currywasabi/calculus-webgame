@@ -16,6 +16,6 @@ export default defineConfig({
   base: '/calculus-webgame/',
   plugins: [react(), copyPrototype()],
   test: {
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.test.{ts,tsx}'],
   },
 })
