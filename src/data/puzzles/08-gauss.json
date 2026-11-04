@@ -1,17 +1,16 @@
 {
   "title": "가우스 적분",
-  "goal": {"tex": "\\sqrt{\\pi}", "value": 1.7724538509055159},
+  "goal": { "tex": "\\sqrt{\\pi}", "value": 1.7724538509055159 },
   "notes": [
-    {"kind": "정리", "tex": "\\int_{-\\infty}^{\\infty} e^{-x^{2}}\\,dx = \\sqrt{\\pi}"},
-    {"kind": "규칙", "text": "적분 구간은 ∫ 의 오른쪽 위와 아래에 붙인다."}
+    { "kind": "규칙", "text": "적분 구간은 ∫ 의 오른쪽 위와 아래에 붙인다." }
   ],
   "pieces": [
-    {"type": "int", "id": "a"},
-    {"type": "inf", "id": "b", "sign": 1},
-    {"type": "inf", "id": "c", "sign": -1},
-    {"type": "const", "id": "d", "c": "e"},
-    {"type": "negsq", "id": "f"},
-    {"type": "dx", "id": "g"}
+    { "type": "int", "id": "a" },
+    { "type": "inf", "id": "b", "sign": 1 },
+    { "type": "inf", "id": "c", "sign": -1 },
+    { "type": "const", "id": "d", "c": "e" },
+    { "type": "negsq", "id": "f" },
+    { "type": "dx", "id": "g" }
   ],
   "sol": {
     "a": [2, 2],
