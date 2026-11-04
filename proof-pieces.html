@@ -1,0 +1,907 @@
+<title>증명 조각</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Nanum+Myeongjo:wght@400;700;800&display=swap">
+<style>
+/* Layout: one printed page — section heading, goal and theorem lines, a dotted 12×8 board, the loose pieces below, controls at the foot */
+:root{
+  --paper:#fbfbf9;
+  --ink:#121212;
+  --ink-2:#76756f;
+  --rule:#e1e1db;
+  --tile:#ffffff;
+  --dot:#c9c9c2;
+  --serif:"Old Standard TT","Nanum Myeongjo","Times New Roman",serif;
+  --kr:"Nanum Myeongjo","Old Standard TT",serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--paper:#121211;--ink:#ecebe6;--ink-2:#8f8e88;--rule:#2e2e2b;--tile:#1a1a18;--dot:#3d3d39;color-scheme:dark}
+}
+:root[data-theme="dark"]{--paper:#121211;--ink:#ecebe6;--ink-2:#8f8e88;--rule:#2e2e2b;--tile:#1a1a18;--dot:#3d3d39;color-scheme:dark}
+
+html,body{background:var(--paper);color:var(--ink)}
+body{font-family:var(--serif);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.app{max-width:40rem;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:1.25rem 2.5rem;display:flex;flex-direction:column;gap:1rem}
+
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap;border-bottom:1px solid var(--ink);padding-bottom:.4rem}
+.sec{margin:0;font-family:var(--kr);font-weight:800;font-size:1.15rem}
+.sec .num{font-family:var(--serif);font-weight:400;margin-right:.4rem}
+.lv{display:flex;gap:2px}
+.lv button{font-family:var(--serif);font-size:.95rem;width:1.7rem;height:1.7rem;border:0;background:transparent;color:var(--ink-2);cursor:pointer;border-radius:2px;font-variant-numeric:tabular-nums;text-decoration-thickness:1px;text-underline-offset:3px}
+.lv button.done{color:var(--ink);text-decoration:underline}
+.lv button[aria-current="true"]{background:var(--ink);color:var(--paper)}
+
+.task{display:flex;flex-direction:column;gap:.35rem}
+.goal{display:flex;align-items:center;gap:.8rem;min-height:2.6rem}
+.lbl{font-family:var(--kr);font-size:.82rem;color:var(--ink-2);letter-spacing:.08em}
+.goal-tex{font-size:1.35rem}
+.note{margin:0;font-family:var(--kr);font-size:.95rem;display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}
+.note b{font-weight:800}
+.note .t{font-style:italic}
+.note .m{font-size:1.05rem}
+
+.bw{display:flex;justify-content:center}
+.board{position:relative;box-shadow:0 0 0 1px var(--ink);background-color:var(--paper);background-image:radial-gradient(circle,var(--dot) 1.1px,transparent 1.4px)}
+.board svg.ov{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+#sil path{fill:none;stroke:var(--ink-2);stroke-width:1.5;stroke-dasharray:2 4}
+#sil rect{fill:var(--ink);fill-opacity:.045}
+#prev path{fill:none;stroke:var(--ink);stroke-width:2;stroke-dasharray:5 3}
+#prev rect{fill:var(--ink);fill-opacity:.07}
+#layer{position:absolute;inset:0}
+
+/* pieces */
+.piece{position:relative;flex:none;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;color:var(--ink)}
+.piece.onboard{position:absolute}
+.piece svg.shape{position:absolute;left:0;top:0;overflow:visible}
+.shape .sh rect{fill:var(--ink)}
+.shape .fl rect{fill:var(--tile)}
+.shape .ol{fill:none;stroke:var(--ink);stroke-width:1;stroke-linecap:square}
+.shape .dr{fill:none;stroke:var(--ink);stroke-linecap:round;stroke-linejoin:round}
+.onboard .shape .sh{display:none}
+.lab{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.piece.bad .shape .fl rect{fill:var(--ink)}
+.piece.bad{color:var(--paper)}
+.piece.bad .shape .dr{stroke:var(--paper)}
+.piece.melt{opacity:.1;transform:scale(.93);transition:opacity .4s ease,transform .4s ease}
+.piece.flash{animation:flash .9s ease-out}
+@keyframes flash{0%,40%{transform:translateY(-4px)}100%{transform:none}}
+.ghost{position:fixed!important;left:0!important;top:0!important;z-index:60;pointer-events:none;opacity:.96}
+.ghost .shape .sh{display:block!important}
+
+.tray{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 14px;min-height:5.5rem;padding:.6rem 0 .3rem;border-bottom:1px solid var(--rule)}
+.tray.shake{animation:shake .35s linear}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+.tray-empty{font-family:var(--kr);color:var(--ink-2);font-size:.85rem;align-self:center}
+
+.bar{display:flex;align-items:center;gap:.6rem}
+.btn{font-family:var(--kr);font-weight:700;font-size:.95rem;padding:.5rem .9rem;background:transparent;color:var(--ink);border:1px solid var(--ink);border-radius:2px;cursor:pointer}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.msg{flex:1;min-width:0;font-family:var(--kr);font-size:.92rem;min-height:1.4em}
+.eq{font-family:var(--serif);font-size:2rem;line-height:1;width:3.6rem;height:3.2rem;background:var(--ink);color:var(--paper);border:0;border-radius:2px;cursor:pointer;box-shadow:3px 3px 0 var(--ink-2)}
+.eq:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink-2)}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+
+/* derivation */
+.deriv{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem 1rem 3.2rem;cursor:pointer;overflow:hidden}
+.dlines{display:flex;flex-direction:column;align-items:center;gap:.55em;max-width:100%}
+.ln{display:flex;align-items:center;gap:.6em;max-width:100%;overflow-x:auto;overflow-y:hidden;animation:lnin .55s ease-out;transition:color .4s,font-size .4s}
+.ln.old{color:var(--ink-2);font-size:.8em}
+.ln.txt{font-family:var(--kr)}
+@keyframes lnin{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
+.qed{font-size:1.5em;line-height:1;animation:pop .5s ease-out}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.3)}100%{transform:none}}
+.dctl{position:absolute;right:.7rem;bottom:.7rem}
+.dctl .btn{background:var(--paper)}
+.dctl .btn:hover{background:var(--ink)}
+
+mjx-container{color:inherit}
+mjx-container[display="true"]{margin:0!important}
+mjx-assistive-mml{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(1px,1px,1px,1px)!important}
+.rawtex{font-family:ui-monospace,monospace;font-size:.75em}
+
+@media (max-width:480px){
+  .eq{width:3rem;height:2.8rem;font-size:1.7rem}
+  .btn{padding:.45rem .65rem;font-size:.88rem}
+  .goal-tex{font-size:1.15rem}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+
+<main class="app" id="app">
+  <header class="head">
+    <h1 class="sec"><span class="num" id="secnum">§1</span><span id="title"></span></h1>
+    <nav class="lv" id="lv" aria-label="문제"></nav>
+  </header>
+
+  <section class="task">
+    <div class="goal"><span class="lbl">목표</span><div class="goal-tex" id="goal"></div></div>
+    <div id="notes"></div>
+  </section>
+
+  <div class="bw" id="bw">
+    <div class="board" id="board">
+      <svg class="ov" id="sil"></svg>
+      <div id="layer"></div>
+      <svg class="ov" id="prev"></svg>
+      <div class="deriv" id="deriv" hidden>
+        <div class="dlines" id="dlines"></div>
+        <div class="dctl" id="dctl" hidden><button class="btn" id="dbtn">다시</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tray" id="tray"></div>
+
+  <div class="bar">
+    <button class="btn" id="hintb">힌트</button>
+    <button class="btn" id="resetb">초기화</button>
+    <span class="msg" id="msg" aria-live="polite"></span>
+    <button class="eq" id="eqb" aria-label="계산">=</button>
+  </div>
+</main>
+
+<script>
+window.MathJax = {
+  tex: { packages: { '[+]': ['ams'] } },
+  svg: { fontCache: 'none' },
+  options: { enableAssistiveMml: false },
+  startup: { typeset: false, ready() { MathJax.startup.defaultReady(); MathJax.startup.promise.then(() => { try { document.head.appendChild(MathJax.svgStylesheet()); } catch (e) {} window.__mjReady && window.__mjReady(); }); } }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js" onerror="window.__mjReady && window.__mjReady()"></script>
+<script>
+/*ENGINE-START*/
+/* ---------- complex numbers ---------- */
+const C = (re, im = 0) => ({ re, im });
+const cadd = (a, b) => C(a.re + b.re, a.im + b.im);
+const csub = (a, b) => C(a.re - b.re, a.im - b.im);
+const cmul = (a, b) => C(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re);
+const cdiv = (a, b) => { const d = b.re * b.re + b.im * b.im; if (d === 0) return C(NaN, NaN); return C((a.re * b.re + a.im * b.im) / d, (a.im * b.re - a.re * b.im) / d); };
+const cexp = a => { const r = Math.exp(a.re); return C(r * Math.cos(a.im), r * Math.sin(a.im)); };
+const clog = a => C(Math.log(Math.hypot(a.re, a.im)), Math.atan2(a.im, a.re));
+function cpow(a, b) {
+  if (b.im === 0 && Number.isInteger(b.re) && Math.abs(b.re) <= 4096) {
+    let n = Math.abs(b.re), r = C(1), base = a;
+    while (n) { if (n & 1) r = cmul(r, base); base = cmul(base, base); n = Math.floor(n / 2); }
+    return b.re < 0 ? cdiv(C(1), r) : r;
+  }
+  if (a.re === 0 && a.im === 0) return b.re > 0 ? C(0) : C(NaN, NaN);
+  if (a.im === 0 && a.re > 0 && b.im === 0) return C(Math.pow(a.re, b.re));
+  return cexp(cmul(b, clog(a)));
+}
+const realInt = z => Math.abs(z.im) < 1e-12 && Math.abs(z.re - Math.round(z.re)) < 1e-9 ? Math.round(z.re) : null;
+const factN = n => { let r = 1; for (let k = 2; k <= n; k++) r *= k; return r; };
+function gammaReal(x) {
+  if (x < 0.5) return Math.PI / (Math.sin(Math.PI * x) * gammaReal(1 - x));
+  const g = 7, p = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+  x -= 1; let a = p[0]; const t = x + g + 0.5;
+  for (let i = 1; i < 9; i++) a += p[i] / (x + i);
+  return Math.sqrt(2 * Math.PI) * Math.pow(t, x + 0.5) * Math.exp(-t) * a;
+}
+function cgamma(z) {
+  if (Math.abs(z.im) > 1e-12) return C(NaN, NaN);
+  const n = realInt(z);
+  if (n !== null) return n <= 0 || n > 171 ? C(NaN, NaN) : C(factN(n - 1));
+  return C(gammaReal(z.re));
+}
+const cfact = z => { const n = realInt(z); return n === null || n < 0 || n > 170 ? C(NaN, NaN) : C(factN(n)); };
+const csqrt = a => (a.im === 0 && a.re >= 0) ? C(Math.sqrt(a.re)) : cpow(a, C(0.5));
+
+/* ---------- 1. spatial parser: placed pieces → expression tree ---------- */
+const E = (msg, ids = []) => ({ msg, ids });
+const MIS = '줄이 맞지 않는 조각이 있다.';
+const ATOM = new Set(['num', 'const', 'lp', 'gamma', 'frac', 'sqrt', 'int', 'inf', 'negsq']);
+const isStruct = p => p.def.kind === 'frac' || p.def.kind === 'sqrt' || p.def.kind === 'int';
+
+function parseRegion(list, ctx, owner) {
+  if (!list.length) throw E('식이 완성되지 않았다.', owner ? [owner] : []);
+  const claimed = new Set();
+  const structs = list.filter(p => p.def.kind === 'frac' || p.def.kind === 'sqrt').sort((a, b) => b.area - a.area);
+  for (const s of structs) {
+    if (claimed.has(s)) continue;
+    const free = p => p !== s && !claimed.has(p);
+    if (s.def.kind === 'frac') {
+      s.num = list.filter(p => free(p) && p.left >= s.left && p.right <= s.right && p.bottom < s.top);
+      s.den = list.filter(p => free(p) && p.left >= s.left && p.right <= s.right && p.top > s.bottom);
+      [...s.num, ...s.den].forEach(p => claimed.add(p));
+    } else {
+      s.inner = list.filter(p => free(p) && p.left > s.left && p.right <= s.right && p.top > s.top && p.bottom <= s.bottom);
+      s.inner.forEach(p => claimed.add(p));
+    }
+  }
+  const U = list.filter(p => !claimed.has(p));
+  const minL = Math.min(...U.map(p => p.left));
+  const lead = U.filter(p => p.left === minL).sort((a, b) => (isStruct(b) - isStruct(a)) || (b.def.h - a.def.h));
+  const A = lead[0].ax;
+  const anchors = U.filter(p => p.ax === A).sort((a, b) => a.left - b.left);
+  anchors.forEach(a => { a.sup = []; a.sub = []; });
+  for (const o of U) {
+    if (o.ax === A) continue;
+    let base = null;
+    for (const a of anchors) if (a.right < o.left && (!base || a.right > base.right)) base = a;
+    if (!base) throw E(MIS, [o.def.id]);
+    if (o.bottom <= base.top) base.sup.push(o);
+    else if (o.top >= base.bottom) base.sub.push(o);
+    else throw E(MIS, [o.def.id]);
+  }
+
+  let i = 0;
+  const T = anchors, peek = () => T[i], K = t => t && t.def.kind;
+  const noScripts = t => { const s = [...t.sup, ...t.sub]; if (s.length) throw E(MIS, s.map(p => p.def.id)); };
+  const withSup = (t, node) => {
+    if (t.sub.length) throw E(MIS, t.sub.map(p => p.def.id));
+    return t.sup.length ? { t: 'pow', b: node, e: parseRegion(t.sup, ctx) } : node;
+  };
+  function primary() {
+    const t = peek();
+    if (!t) throw E('식이 완성되지 않았다.', T.length ? [T[T.length - 1].def.id] : []);
+    const d = t.def;
+    switch (d.kind) {
+      case 'num': i++; return withSup(t, { t: 'num', v: d.v });
+      case 'const': i++; return withSup(t, { t: 'const', c: d.c });
+      case 'inf': i++; noScripts(t); return { t: 'inf', sign: d.sign };
+      case 'negsq': i++; if (!ctx.intDepth) throw E('x가 적분 밖에 있다.', [d.id]); return withSup(t, { t: 'negsq' });
+      case 'frac': {
+        i++;
+        if (!t.num.length || !t.den.length) throw E('분수가 비어 있다.', [d.id]);
+        const node = { t: 'div', a: parseRegion(t.num, ctx), b: parseRegion(t.den, ctx) };
+        return t.sup.length ? withSup(t, { t: 'group', a: node }) : (noScripts(t), node);
+      }
+      case 'sqrt':
+        i++;
+        if (!t.inner.length) throw E('근호가 비어 있다.', [d.id]);
+        return withSup(t, { t: 'sqrt', a: parseRegion(t.inner, ctx) });
+      case 'lp': {
+        i++; noScripts(t);
+        const inner = expr(), r = peek();
+        if (!r || K(r) !== 'rp') throw E('괄호가 닫히지 않았다.', [d.id]);
+        i++; return withSup(r, { t: 'group', a: inner });
+      }
+      case 'gamma':
+        i++; noScripts(t);
+        if (!peek() || !ATOM.has(K(peek()))) throw E('Γ 뒤에 올 것이 없다.', [d.id]);
+        return { t: 'gamma', a: primary() };
+      case 'int': {
+        i++;
+        if (!t.sup.length || !t.sub.length) throw E('적분 구간이 없다.', [d.id]);
+        const hi = parseRegion(t.sup, ctx), lo = parseRegion(t.sub, ctx);
+        ctx.intDepth++;
+        const body = expr();
+        ctx.intDepth--;
+        const r = peek();
+        if (!r || K(r) !== 'dx') throw E('dx가 없다.', [d.id]);
+        noScripts(r); i++;
+        return { t: 'int', lo, hi, body };
+      }
+      case 'dx': throw E('∫ 없이 dx가 있다.', [d.id]);
+      default: throw E('식이 완성되지 않았다.', [d.id]);
+    }
+  }
+  function unary() {
+    const t = peek();
+    if (t && K(t) === 'op' && t.def.op === '−') { noScripts(t); i++; return { t: 'neg', a: unary() }; }
+    return primary();
+  }
+  function term() {
+    let n = unary();
+    for (;;) {
+      const t = peek(); if (!t) break;
+      if (K(t) === 'op' && t.def.op === '×') { noScripts(t); i++; n = { t: 'bin', op: '×', a: n, b: unary() }; continue; }
+      if (ATOM.has(K(t))) { n = { t: 'bin', op: 'imp', a: n, b: primary() }; continue; }
+      break;
+    }
+    return n;
+  }
+  function expr() {
+    let n = term();
+    for (;;) {
+      const t = peek();
+      if (t && K(t) === 'op' && (t.def.op === '+' || t.def.op === '−')) { noScripts(t); i++; n = { t: 'bin', op: t.def.op, a: n, b: term() }; continue; }
+      break;
+    }
+    return n;
+  }
+  const res = expr();
+  if (i < T.length) {
+    const t = T[i];
+    throw E(t.def.kind === 'dx' ? '∫ 없이 dx가 있다.' : '식이 완성되지 않았다.', [t.def.id]);
+  }
+  return res;
+}
+
+/* ---------- 2. numeric evaluation (answer check + fallback) ---------- */
+function N(n, env) {
+  switch (n.t) {
+    case 'num': return C(n.v);
+    case 'const': return n.c === 'e' ? C(Math.E) : n.c === 'π' ? C(Math.PI) : C(0, 1);
+    case 'inf': return C(n.sign * Infinity);
+    case 'negsq': return C(-(env.x * env.x));
+    case 'group': return N(n.a, env);
+    case 'neg': { const a = N(n.a, env); return C(-a.re, -a.im); }
+    case 'div': return cdiv(N(n.a, env), N(n.b, env));
+    case 'bin': { const a = N(n.a, env), b = N(n.b, env); return n.op === '+' ? cadd(a, b) : n.op === '−' ? csub(a, b) : cmul(a, b); }
+    case 'pow': return cpow(N(n.b, env), N(n.e, env));
+    case 'sqrt': return csqrt(N(n.a, env));
+    case 'gamma': return cgamma(N(n.a, env));
+    case 'fact': return cfact(N(n.a, env));
+    case 'int': return quad(n, env);
+  }
+  return C(NaN, NaN);
+}
+function quad(n, env) {
+  const lo = N(n.lo, env).re, hi = N(n.hi, env).re;
+  if (lo === hi) return C(0);
+  if (lo > hi) { const r = quadR(n, hi, lo, env); return C(-r.re, -r.im); }
+  return quadR(n, lo, hi, env);
+}
+function quadR(n, a, b, env) {
+  const f = x => N(n.body, Object.assign({}, env, { x }));
+  let map, ta = 0, tb = 1;
+  if (a === -Infinity && b === Infinity) { map = t => [t / (1 - t * t), (1 + t * t) / ((1 - t * t) ** 2)]; ta = -1; }
+  else if (b === Infinity) map = t => [a + t / (1 - t), 1 / ((1 - t) ** 2)];
+  else if (a === -Infinity) map = t => [b - t / (1 - t), 1 / ((1 - t) ** 2)];
+  else { map = t => [t, 1]; ta = a; tb = b; }
+  const run = M => {
+    let re = 0, im = 0; const h = (tb - ta) / M;
+    for (let k = 0; k < M; k++) {
+      const [x, w] = map(ta + (k + 0.5) * h);
+      if (!isFinite(x) || !isFinite(w)) continue;
+      const z = f(x);
+      if (z.re === 0 && z.im === 0) continue;
+      re += z.re * w; im += z.im * w;
+    }
+    return C(re * h, im * h);
+  };
+  const r1 = run(3000), r2 = run(6000);
+  const ok = [r1.re, r1.im, r2.re, r2.im].every(isFinite) && Math.hypot(r1.re - r2.re, r1.im - r2.im) <= 1e-5 * Math.max(1, Math.hypot(r2.re, r2.im));
+  if (!ok) throw { diverge: true };
+  return r2;
+}
+const close = (z, g) => isFinite(z.re) && isFinite(z.im) && Math.hypot(z.re - g.re, z.im - g.im) <= 1e-7 * Math.max(1, Math.hypot(g.re, g.im));
+
+/* ---------- 3. rewrite engine: step-by-step solution trace ---------- */
+const num = v => ({ t: 'num', v });
+const isNum = n => n.t === 'num';
+const isLit = n => isNum(n) || (n.t === 'div' && isNum(n.a) && isNum(n.b) && n.b.v !== 0);
+const rat = n => isNum(n) ? [n.v, 1] : [n.a.v, n.b.v];
+const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a || 1; };
+function mk(p, q) {
+  if (q === 0) throw { undef: true };
+  if (q < 0) { p = -p; q = -q; }
+  const g = gcd(p, q); p /= g; q /= g;
+  return q === 1 ? num(p) : { t: 'div', a: num(p), b: num(q) };
+}
+function arith(op, x, y) {
+  const [a, b] = rat(x), [c, d] = rat(y);
+  if (op === '+') return mk(a * d + c * b, b * d);
+  if (op === '−') return mk(a * d - c * b, b * d);
+  return mk(a * c, b * d);
+}
+const isConst = (n, c) => n.t === 'const' && n.c === c;
+const isIPi = n => n.t === 'bin' && (n.op === 'imp' || n.op === '×') && ((isConst(n.a, 'i') && isConst(n.b, 'π')) || (isConst(n.a, 'π') && isConst(n.b, 'i')));
+const isGaussBody = n => n.t === 'pow' && isConst(n.b, 'e') && n.e.t === 'negsq';
+const perfect = v => { if (v < 0) return null; const r = Math.round(Math.sqrt(v)); return r * r === v ? r : null; };
+
+function rule(n) {
+  switch (n.t) {
+    case 'group':
+      if (isLit(n.a) || n.a.t === 'const' || n.a.t === 'sqrt' || n.a.t === 'fact' || n.a.t === 'gamma') return [n.a];
+      return null;
+    case 'div':
+      if (isNum(n.a) && isNum(n.b)) {
+        const r = mk(n.a.v, n.b.v);
+        if (isNum(r) || r.a.v !== n.a.v || r.b.v !== n.b.v) return [r];
+      }
+      return null;
+    case 'bin':
+      if (isLit(n.a) && isLit(n.b)) return [arith(n.op, n.a, n.b)];
+      return null;
+    case 'neg':
+      if (isLit(n.a)) { const [p, q] = rat(n.a); return [mk(-p, q)]; }
+      return null;
+    case 'pow': {
+      if (isConst(n.b, 'e') && isIPi(n.e)) return [num(-1)];
+      if (isConst(n.b, 'i') && isNum(n.e)) {
+        const k = ((n.e.v % 4) + 4) % 4;
+        return [[num(1), { t: 'const', c: 'i' }, num(-1), { t: 'neg', a: { t: 'const', c: 'i' } }][k]];
+      }
+      if (isLit(n.b) && isNum(n.e) && Math.abs(n.e.v) <= 40) {
+        let [p, q] = rat(n.b), k = n.e.v;
+        if (k < 0) { [p, q] = [q, p]; k = -k; }
+        const P = p ** k, Q = q ** k;
+        if (Math.abs(P) > 1e15 || Q > 1e15) return null;
+        return [mk(P, Q)];
+      }
+      return null;
+    }
+    case 'sqrt':
+      if (isNum(n.a)) { const r = perfect(n.a.v); if (r !== null) return [num(r)]; }
+      if (n.a.t === 'div' && isLit(n.a)) { const p = perfect(n.a.a.v), q = perfect(n.a.b.v); if (p !== null && q !== null) return [mk(p, q)]; }
+      return null;
+    case 'gamma':
+      if (isNum(n.a)) { if (n.a.v <= 0) throw { undef: true }; return [{ t: 'fact', a: num(n.a.v - 1) }]; }
+      return null;
+    case 'fact':
+      if (isNum(n.a) && n.a.v >= 0 && n.a.v <= 20) return [num(factN(n.a.v))];
+      return null;
+    case 'int':
+      if (n.lo.t === 'inf' && n.hi.t === 'inf') {
+        if (n.lo.sign === n.hi.sign) return [num(0)];
+        if (n.lo.sign > 0) return [{ t: 'neg', a: Object.assign({}, n, { lo: n.hi, hi: n.lo }) }];
+        if (isGaussBody(n.body)) return [
+          { t: 'raw', tex: '\\sqrt{\\int_{-\\infty}^{\\infty}\\!\\int_{-\\infty}^{\\infty} e^{-(x^{2}+y^{2})}\\,dx\\,dy}' },
+          { t: 'raw', tex: '\\sqrt{\\int_{0}^{2\\pi}\\!\\int_{0}^{\\infty} e^{-r^{2}}\\,r\\,dr\\,d\\theta}' },
+          { t: 'raw', tex: '\\sqrt{2\\pi\\cdot\\tfrac{1}{2}}' },
+          { t: 'sqrt', a: { t: 'const', c: 'π' } }
+        ];
+      }
+      return null;
+  }
+  return null;
+}
+const KIDS = { bin: ['a', 'b'], div: ['a', 'b'], neg: ['a'], group: ['a'], sqrt: ['a'], gamma: ['a'], fact: ['a'], pow: ['b', 'e'], int: ['lo', 'hi', 'body'] };
+function step(n) {
+  for (const k of KIDS[n.t] || []) {
+    const r = step(n[k]);
+    if (r) return r.map(c => Object.assign({}, n, { [k]: c }));
+  }
+  return rule(n);
+}
+function nice(n) {
+  return isLit(n) || n.t === 'const' || ((n.t === 'sqrt' || n.t === 'neg' || n.t === 'group') && nice(n.a)) || (n.t === 'pow' && nice(n.b) && nice(n.e));
+}
+function trace(ast) {
+  const lines = [tx(ast)];
+  let cur = ast, err = null;
+  try {
+    for (let g = 0; g < 40; g++) {
+      const r = step(cur);
+      if (!r) break;
+      for (const s of r) { const t = tx(s); if (t !== lines[lines.length - 1]) lines.push(t); }
+      cur = r[r.length - 1];
+    }
+  } catch (e) { err = e; }
+  return { lines, final: cur, err };
+}
+
+/* ---------- LaTeX ---------- */
+const strip = n => n.t === 'group' ? n.a : n;
+const startsDigit = n => n.t === 'num' || (n.t === 'pow' && startsDigit(n.b)) || (n.t === 'bin' && startsDigit(n.a));
+const negLit = n => (isNum(n) && n.v < 0) || (n.t === 'div' && isNum(n.a) && n.a.v < 0) || n.t === 'neg';
+const rhs = n => negLit(n) ? '\\left(' + tx(n) + '\\right)' : tx(n);
+function tx(n) {
+  switch (n.t) {
+    case 'num': return String(n.v);
+    case 'const': return n.c === 'π' ? '\\pi ' : n.c;
+    case 'inf': return n.sign > 0 ? '\\infty ' : '-\\infty ';
+    case 'negsq': return '-x^{2}';
+    case 'raw': return n.tex;
+    case 'group': return '\\left(' + tx(n.a) + '\\right)';
+    case 'neg': return '-' + ((n.a.t === 'bin' && (n.a.op === '+' || n.a.op === '−')) ? '\\left(' + tx(n.a) + '\\right)' : tx(n.a));
+    case 'div':
+      if (isNum(n.a) && isNum(n.b) && n.a.v < 0) return '-\\frac{' + (-n.a.v) + '}{' + n.b.v + '}';
+      return '\\frac{' + tx(strip(n.a)) + '}{' + tx(strip(n.b)) + '}';
+    case 'bin':
+      if (n.op === '+') return tx(n.a) + '+' + rhs(n.b);
+      if (n.op === '−') return tx(n.a) + '-' + rhs(n.b);
+      if (n.op === '×') return tx(n.a) + '\\times ' + rhs(n.b);
+      if (startsDigit(n.b)) return tx(n.a) + '\\cdot ' + tx(n.b);
+      return tx(n.a) + ((n.a.t === 'num' || n.a.t === 'const') && n.b.t === 'const' ? '' : '\\,') + tx(n.b);
+    case 'pow': {
+      const b = n.b;
+      const wrap = negLit(b) || b.t === 'div' || b.t === 'bin' || b.t === 'fact' || b.t === 'gamma';
+      return '{' + (wrap ? '\\left(' + tx(b) + '\\right)' : tx(b)) + '}^{' + tx(n.e) + '}';
+    }
+    case 'sqrt': return '\\sqrt{' + tx(strip(n.a)) + '}';
+    case 'gamma': return '\\Gamma' + (n.a.t === 'group' ? tx(n.a) : '\\left(' + tx(n.a) + '\\right)');
+    case 'fact': return (isNum(n.a) && n.a.v >= 0) ? tx(n.a) + '!' : '\\left(' + tx(n.a) + '\\right)!';
+    case 'int': return '\\int_{' + tx(n.lo) + '}^{' + tx(n.hi) + '} ' + tx(n.body) + '\\,dx';
+  }
+  return '';
+}
+function fmt(z) {
+  const r = x => { let s = x.toFixed(4).replace(/\.?0+$/, ''); return s === '-0' ? '0' : s; };
+  if (Math.abs(z.im) < 1e-9) return r(z.re);
+  const im = Math.abs(z.im);
+  return r(z.re) + (z.im < 0 ? '-' : '+') + (Math.abs(im - 1) < 1e-9 ? '' : r(im)) + 'i';
+}
+/*ENGINE-END*/
+
+/* ---------- pieces & levels ---------- */
+const rect = (w, h) => { const c = []; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) c.push([x, y]); return c; };
+const P = {
+  num: (id, v) => ({ id, kind: 'num', v, tex: String(v), w: 2, h: 3, axis: 1, em: 1.6 }),
+  con: (id, c) => ({ id, kind: 'const', c, tex: { e: 'e', 'π': '\\pi', i: 'i' }[c], w: 2, h: 3, axis: 1, em: 1.6 }),
+  op: (id, op) => ({ id, kind: 'op', op, tex: { '+': '+', '−': '-', '×': '\\times' }[op], w: 1, h: 1, axis: 0, em: .9 }),
+  lp: id => ({ id, kind: 'lp', tex: '(', w: 1, h: 3, axis: 1, fit: .82 }),
+  rp: id => ({ id, kind: 'rp', tex: ')', w: 1, h: 3, axis: 1, fit: .82 }),
+  gamma: id => ({ id, kind: 'gamma', tex: '\\Gamma', w: 2, h: 3, axis: 1, em: 1.6 }),
+  frac: (id, w) => ({ id, kind: 'frac', w, h: 1, axis: 0, draw: 'bar', aria: '분수 막대' }),
+  sqrt: (id, w, h) => {
+    const cells = []; for (let y = 0; y < h; y++) cells.push([0, y]); for (let x = 1; x < w; x++) cells.push([x, 0]);
+    return { id, kind: 'sqrt', w, h, axis: h - 2, cells, draw: 'root', aria: '근호' };
+  },
+  int: id => ({ id, kind: 'int', tex: '\\displaystyle\\int', w: 1, h: 5, axis: 2, fit: .9 }),
+  inf: (id, s) => ({ id, kind: 'inf', sign: s, tex: s > 0 ? '\\infty' : '-\\infty', w: 2, h: 1, axis: 0, em: .92 }),
+  nsq: id => ({ id, kind: 'negsq', tex: '-x^{2}', w: 2, h: 1, axis: 0, em: .8 }),
+  dx: id => ({ id, kind: 'dx', tex: 'dx', w: 2, h: 3, axis: 1, em: 1.3 })
+};
+const LEVELS = [
+  { title: '덧셈', goal: ['7', 7], notes: [['규칙', '조각을 모두 판 위에 놓고 = 을 누른다.']],
+    pieces: [P.num('a', 3), P.op('b', '+'), P.num('c', 4)],
+    sol: { a: [4, 3], b: [6, 4], c: [7, 3] } },
+  { title: '우선순위', goal: ['14', 14], notes: [],
+    pieces: [P.num('a', 2), P.op('b', '+'), P.num('c', 3), P.op('d', '×'), P.num('f', 4)],
+    sol: { a: [2, 3], b: [4, 4], c: [5, 3], d: [7, 4], f: [8, 3] } },
+  { title: '거듭제곱', goal: ['26', 26], notes: [['규칙', '오른쪽 위로 올려 붙이면 지수가 된다.']],
+    pieces: [P.num('a', 5), P.num('b', 2), P.op('c', '+'), P.num('d', 1)],
+    sol: { a: [3, 3], b: [5, 1], c: [7, 4], d: [8, 3] } },
+  { title: '분수', goal: ['4', 4], notes: [['규칙', '막대 위는 분자, 아래는 분모.']],
+    pieces: [P.num('a', 6), P.frac('b', 2), P.num('c', 2), P.op('d', '+'), P.num('f', 1)],
+    sol: { a: [4, 1], b: [4, 4], c: [4, 5], d: [6, 4], f: [7, 3] } },
+  { title: '제곱근', goal: ['5', 5], notes: [['규칙', '지붕 아래에 든 것만 근호 안에 들어간다.']],
+    pieces: [P.sqrt('a', 6, 4), P.num('b', 9), P.op('c', '+'), P.num('d', 16)],
+    sol: { a: [2, 2], b: [3, 3], c: [5, 4], d: [6, 3] } },
+  { title: '감마함수', goal: ['120', 120], notes: [['정리', null, '\\Gamma(n) = (n-1)!']],
+    pieces: [P.gamma('a'), P.lp('b'), P.num('c', 3), P.op('d', '+'), P.num('f', 3), P.rp('g')],
+    sol: { a: [1, 3], b: [3, 3], c: [4, 3], d: [6, 4], f: [7, 3], g: [9, 3] } },
+  { title: '오일러 등식', goal: ['0', 0], notes: [['정리', null, 'e^{i\\pi} = -1']],
+    pieces: [P.con('a', 'e'), P.con('b', 'i'), P.con('c', 'π'), P.op('d', '+'), P.num('f', 1)],
+    sol: { a: [2, 3], b: [4, 1], c: [6, 1], d: [8, 4], f: [9, 3] } },
+  { title: '가우스 적분', goal: ['\\sqrt{\\pi}', Math.sqrt(Math.PI)],
+    notes: [['정리', null, '\\int_{-\\infty}^{\\infty} e^{-x^{2}}\\,dx = \\sqrt{\\pi}'], ['규칙', '적분 구간은 ∫ 의 오른쪽 위와 아래에 붙인다.']],
+    pieces: [P.int('a'), P.inf('b', 1), P.inf('c', -1), P.con('d', 'e'), P.nsq('f'), P.dx('g')],
+    sol: { a: [2, 2], b: [3, 2], c: [3, 6], d: [3, 3], f: [5, 2], g: [7, 3] } }
+];
+
+/* ---------- state ---------- */
+const COLS = 12, ROWS = 8;
+let cell = 40;
+const S = { li: 0, place: {}, hint: 0, order: [], solved: new Set(), busy: false, skip: false };
+try { const s = JSON.parse(localStorage.getItem('proof-pieces-solved') || '[]'); s.forEach(k => S.solved.add(k)); } catch (e) {}
+const saveSolved = () => { try { localStorage.setItem('proof-pieces-solved', JSON.stringify([...S.solved])); } catch (e) {} };
+const lvl = () => LEVELS[S.li];
+const $ = id => document.getElementById(id);
+const el = { secnum: $('secnum'), title: $('title'), lv: $('lv'), goal: $('goal'), notes: $('notes'), bw: $('bw'), board: $('board'), sil: $('sil'), layer: $('layer'), prev: $('prev'), deriv: $('deriv'), dlines: $('dlines'), dctl: $('dctl'), dbtn: $('dbtn'), tray: $('tray'), msg: $('msg') };
+
+/* ---------- MathJax helpers ---------- */
+const mjCache = new Map();
+function mj(tex, display = false) {
+  const k = (display ? 'D' : 'I') + tex;
+  let n = mjCache.get(k);
+  if (!n) {
+    try { if (!window.MathJax || !MathJax.tex2svg) throw 0; n = MathJax.tex2svg(tex, { display }); }
+    catch (e) { n = document.createElement('span'); n.className = 'rawtex'; n.textContent = tex; }
+    mjCache.set(k, n);
+  }
+  return n.cloneNode(true);
+}
+
+/* ---------- geometry ---------- */
+const cellsOf = d => d.cells || rect(d.w, d.h);
+const absCells = (d, x, y) => cellsOf(d).map(([a, b]) => [a + x, b + y]);
+function occMap(except) {
+  const m = new Map();
+  for (const d of lvl().pieces) {
+    if (d.id === except || !S.place[d.id]) continue;
+    const [x, y] = S.place[d.id];
+    for (const [a, b] of absCells(d, x, y)) m.set(a + ',' + b, d.id);
+  }
+  return m;
+}
+function canPlace(d, x, y, except) {
+  const m = occMap(except);
+  return absCells(d, x, y).every(([a, b]) => a >= 0 && b >= 0 && a < COLS && b < ROWS && !m.has(a + ',' + b));
+}
+function edges(cells, c) {
+  const set = new Set(cells.map(p => p[0] + ',' + p[1]));
+  let o = '', f = '';
+  for (const [x, y] of cells) {
+    const X = x * c, Y = y * c;
+    f += `<rect x="${X}" y="${Y}" width="${c}" height="${c}"/>`;
+    if (!set.has(x + ',' + (y - 1))) o += `M${X} ${Y + .5}H${X + c}`;
+    if (!set.has(x + ',' + (y + 1))) o += `M${X} ${Y + c - .5}H${X + c}`;
+    if (!set.has((x - 1) + ',' + y)) o += `M${X + .5} ${Y}V${Y + c}`;
+    if (!set.has((x + 1) + ',' + y)) o += `M${X + c - .5} ${Y}V${Y + c}`;
+  }
+  return { o, f };
+}
+
+/* ---------- rendering ---------- */
+function pieceEl(d) {
+  const e = document.createElement('div');
+  e.className = 'piece k-' + d.kind;
+  e.dataset.id = d.id;
+  const W = d.w * cell, H = d.h * cell;
+  e.style.width = W + 'px'; e.style.height = H + 'px';
+  const { o, f } = edges(cellsOf(d), cell);
+  let extra = '';
+  const sw = Math.max(1.6, cell * .075);
+  if (d.draw === 'bar') extra = `<path class="dr" stroke-width="${sw}" d="M${cell * .2} ${cell / 2}H${W - cell * .2}"/>`;
+  if (d.draw === 'root') extra = `<path class="dr" stroke-width="${sw}" d="M${cell * .14} ${cell * (d.h - 1.65)}L${cell * .34} ${cell * (d.h - 1.85)}L${cell * .56} ${cell * (d.h - .3)}L${cell * .84} ${cell * .5}H${W - cell * .15}"/>`;
+  e.innerHTML = `<svg class="shape" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><g class="sh" transform="translate(2.5 2.5)">${f}</g><g class="fl">${f}</g><path class="ol" d="${o}"/>${extra}</svg>`;
+  if (d.tex) {
+    const lab = document.createElement('div');
+    lab.className = 'lab';
+    const node = mj(d.tex);
+    lab.appendChild(node);
+    const svg = node.querySelector && node.querySelector('svg');
+    if (svg && d.fit) {
+      const wx = parseFloat(svg.getAttribute('width')), hx = parseFloat(svg.getAttribute('height'));
+      if (wx && hx) {
+        const r = wx / hx; let h = H * d.fit, w = h * r;
+        if (w > W * .92) { w = W * .92; h = w / r; }
+        svg.setAttribute('width', w + 'px'); svg.setAttribute('height', h + 'px'); svg.style.verticalAlign = '0';
+      }
+    } else lab.style.fontSize = (d.em * cell) + 'px';
+    e.appendChild(lab);
+  }
+  e.setAttribute('role', 'img');
+  e.setAttribute('aria-label', d.aria || d.tex);
+  return e;
+}
+function computeCell() {
+  const w = el.bw.clientWidth || 360;
+  cell = Math.max(18, Math.min(44, Math.floor(w / COLS)));
+}
+function renderHead() {
+  const L = lvl();
+  el.secnum.textContent = '§' + (S.li + 1);
+  el.title.textContent = L.title;
+  el.goal.innerHTML = '';
+  el.goal.appendChild(mj('\\boxed{\\phantom{00}}\\;=\\;' + L.goal[0]));
+  el.notes.innerHTML = '';
+  for (const [kind, text, tex] of L.notes) {
+    const p = document.createElement('p'); p.className = 'note';
+    const b = document.createElement('b'); b.textContent = kind + '.'; p.appendChild(b);
+    if (tex) { const m = document.createElement('span'); m.className = 'm'; m.appendChild(mj(tex)); p.appendChild(m); }
+    if (text) { const t = document.createElement('span'); t.className = 't'; t.textContent = text; p.appendChild(t); }
+    el.notes.appendChild(p);
+  }
+  el.lv.innerHTML = LEVELS.map((_, k) => `<button data-k="${k}" class="${S.solved.has(k) ? 'done' : ''}" aria-current="${k === S.li}" aria-label="${k + 1}번 문제">${k + 1}</button>`).join('');
+}
+function renderBoard() {
+  const W = COLS * cell, H = ROWS * cell;
+  el.board.style.width = W + 'px'; el.board.style.height = H + 'px';
+  el.board.style.backgroundSize = cell + 'px ' + cell + 'px';
+  el.board.style.backgroundPosition = (-cell / 2) + 'px ' + (-cell / 2) + 'px';
+  el.deriv.style.fontSize = Math.max(14, cell * .5) + 'px';
+  for (const s of [el.sil, el.prev]) { s.setAttribute('width', W); s.setAttribute('height', H); }
+  el.layer.innerHTML = '';
+  for (const d of lvl().pieces) {
+    const p = S.place[d.id]; if (!p) continue;
+    const e = pieceEl(d);
+    e.classList.add('onboard');
+    e.style.left = p[0] * cell + 'px'; e.style.top = p[1] * cell + 'px';
+    el.layer.appendChild(e);
+  }
+  if (S.hint >= 1) {
+    const L = lvl(), cells = [];
+    for (const d of L.pieces) cells.push(...absCells(d, ...L.sol[d.id]));
+    const { o, f } = edges(cells, cell);
+    el.sil.innerHTML = f + `<path d="${o}"/>`;
+  } else el.sil.innerHTML = '';
+}
+function renderTray() {
+  el.tray.innerHTML = '';
+  const L = lvl();
+  let any = false;
+  for (const id of S.order) {
+    if (S.place[id]) continue;
+    any = true;
+    el.tray.appendChild(pieceEl(L.pieces.find(d => d.id === id)));
+  }
+  if (!any) el.tray.innerHTML = '<span class="tray-empty">모든 조각이 판 위에 있다.</span>';
+}
+function render() { computeCell(); renderBoard(); renderTray(); }
+function msg(t) { el.msg.textContent = t || ''; }
+
+/* ---------- level flow ---------- */
+function loadLevel(k, place) {
+  S.li = k; S.place = place || {}; S.hint = 0; S.busy = false; S.skip = true;
+  const ids = lvl().pieces.map(d => d.id);
+  for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+  S.order = ids;
+  el.deriv.hidden = true; el.dctl.hidden = true;
+  msg('');
+  renderHead(); render();
+}
+el.lv.addEventListener('click', e => { const b = e.target.closest('button'); if (b) loadLevel(+b.dataset.k); });
+$('resetb').addEventListener('click', () => { if (S.busy) return; S.place = {}; S.hint = 0; msg(''); render(); });
+
+const key = d => d.kind + '|' + (d.tex || '') + '|' + d.w + 'x' + d.h;
+function hint() {
+  if (S.busy) return;
+  const L = lvl();
+  if (S.hint === 0) { S.hint = 1; msg(''); renderBoard(); return; }
+  const at = (id, pos) => S.place[id] && S.place[id][0] === pos[0] && S.place[id][1] === pos[1];
+  const satisfied = q => L.pieces.some(s => key(s) === key(q) && at(q.id, L.sol[s.id]));
+  for (const slot of L.pieces) {
+    const pos = L.sol[slot.id];
+    if (L.pieces.some(q => key(q) === key(slot) && at(q.id, pos))) continue;
+    const cands = L.pieces.filter(q => key(q) === key(slot) && !satisfied(q));
+    const q = cands.find(c => !S.place[c.id]) || cands[0];
+    if (!q) continue;
+    const target = new Set(absCells(q, pos[0], pos[1]).map(c => c + ''));
+    for (const r of L.pieces) {
+      if (r.id === q.id || !S.place[r.id]) continue;
+      if (absCells(r, ...S.place[r.id]).some(c => target.has(c + ''))) delete S.place[r.id];
+    }
+    S.place[q.id] = pos.slice();
+    S.hint++;
+    msg('');
+    render();
+    const pe = el.layer.querySelector(`[data-id="${q.id}"]`);
+    if (pe) pe.classList.add('flash');
+    return;
+  }
+  msg('이미 맞게 놓여 있다.');
+}
+$('hintb').addEventListener('click', hint);
+
+/* ---------- drag & drop ---------- */
+let drag = null;
+document.addEventListener('pointerdown', e => {
+  const pe = e.target.closest('.piece');
+  if (!pe || S.busy || pe.classList.contains('ghost')) return;
+  e.preventDefault();
+  const r = pe.getBoundingClientRect();
+  drag = { id: pe.dataset.id, el: pe, x0: e.clientX, y0: e.clientY, gx: e.clientX - r.left, gy: e.clientY - r.top, moved: false, snap: null };
+});
+function snapAt(px, py, cx, cy) {
+  const br = el.board.getBoundingClientRect();
+  const d = lvl().pieces.find(q => q.id === drag.id);
+  const x = Math.round((px - br.left) / cell), y = Math.round((py - br.top) / cell);
+  const over = cx >= br.left && cx <= br.right && cy >= br.top && cy <= br.bottom;
+  return { x, y, over, valid: canPlace(d, x, y, d.id), d };
+}
+function showPreview(s) {
+  if (!s || !s.valid) { el.prev.innerHTML = ''; return; }
+  const { o, f } = edges(absCells(s.d, s.x, s.y), cell);
+  el.prev.innerHTML = f + `<path d="${o}"/>`;
+}
+window.addEventListener('pointermove', e => {
+  if (!drag) return;
+  if (!drag.moved) {
+    if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 5) return;
+    drag.moved = true;
+    const g = drag.el.cloneNode(true);
+    g.classList.remove('onboard', 'flash', 'bad');
+    g.classList.add('ghost');
+    document.body.appendChild(g);
+    drag.ghost = g;
+    drag.el.style.visibility = 'hidden';
+    msg('');
+  }
+  const px = e.clientX - drag.gx, py = e.clientY - drag.gy;
+  drag.ghost.style.transform = `translate(${px}px,${py}px)`;
+  drag.snap = snapAt(px, py, e.clientX, e.clientY);
+  showPreview(drag.snap);
+});
+function autoPlace(d) {
+  const y0 = Math.max(0, Math.min(ROWS - d.h, 4 - d.axis));
+  let start = 1;
+  for (const q of lvl().pieces) if (S.place[q.id]) start = Math.max(start, S.place[q.id][0] + q.w);
+  for (let x = start; x + d.w <= COLS; x++) if (canPlace(d, x, y0, d.id)) return [x, y0];
+  for (let y = 0; y + d.h <= ROWS; y++) for (let x = 0; x + d.w <= COLS; x++) if (canPlace(d, x, y, d.id)) return [x, y];
+  return null;
+}
+function endDrag(apply) {
+  if (!drag) return;
+  const dr = drag; drag = null;
+  el.prev.innerHTML = '';
+  if (!dr.moved) {
+    if (!apply) return;
+    if (S.place[dr.id]) delete S.place[dr.id];
+    else { const pos = autoPlace(lvl().pieces.find(q => q.id === dr.id)); if (pos) S.place[dr.id] = pos; }
+    msg(''); render(); return;
+  }
+  dr.ghost.remove();
+  dr.el.style.visibility = '';
+  const s = dr.snap;
+  if (apply && s) {
+    if (s.valid) S.place[dr.id] = [s.x, s.y];
+    else if (!s.over) delete S.place[dr.id];
+  }
+  render();
+}
+window.addEventListener('pointerup', () => endDrag(true));
+window.addEventListener('pointercancel', () => endDrag(false));
+
+/* ---------- evaluate ---------- */
+function markBad(ids) {
+  for (const id of ids) {
+    const pe = el.layer.querySelector(`[data-id="${id}"]`);
+    if (pe) { pe.classList.add('bad'); setTimeout(() => pe.classList.remove('bad'), 1800); }
+  }
+}
+function placedList() {
+  return lvl().pieces.filter(d => S.place[d.id]).map(d => {
+    const [x, y] = S.place[d.id];
+    return { def: d, left: x, right: x + d.w - 1, top: y, bottom: y + d.h - 1, ax: y + d.axis, area: cellsOf(d).length };
+  });
+}
+const wait = ms => new Promise(res => { if (S.skip) return res(); const t = setTimeout(res, ms); S.cancelWait = () => { clearTimeout(t); res(); }; });
+async function solve() {
+  if (S.busy) return;
+  const L = lvl();
+  const list = placedList();
+  if (!list.length) { msg('판이 비어 있다.'); return; }
+  if (list.length < L.pieces.length) { msg('조각이 남았다.'); el.tray.classList.remove('shake'); void el.tray.offsetWidth; el.tray.classList.add('shake'); return; }
+  let ast;
+  try { ast = parseRegion(list, { intDepth: 0 }); }
+  catch (err) { msg(err && err.msg ? err.msg : '식이 완성되지 않았다.'); if (err && err.ids) markBad(err.ids); return; }
+
+  const goal = C(L.goal[1]);
+  let val = null, reason = '';
+  try { val = N(ast, {}); if (!isFinite(val.re) || !isFinite(val.im)) { val = null; reason = '정의되지 않는다.'; } }
+  catch (e) { reason = e && e.diverge ? '발산한다.' : '정의되지 않는다.'; }
+  const tr = trace(ast);
+  const lines = tr.lines.map((t, k) => ({ tex: k ? '=' + t : t }));
+  if (tr.err) lines.push({ text: '정의되지 않는다.' });
+  else if (!nice(tr.final)) lines.push(val ? { tex: '\\approx ' + fmt(val) } : { text: reason });
+  const ok = !!val && close(val, goal);
+  if (!ok && lines[lines.length - 1].tex) lines[lines.length - 1].tex += '\\;\\neq\\;' + L.goal[0];
+  msg('');
+  await play(lines, ok);
+}
+async function play(lines, ok) {
+  S.busy = true; S.skip = false;
+  const ps = [...el.layer.children].sort((a, b) => a.offsetLeft - b.offsetLeft);
+  ps.forEach((p, k) => { p.style.transitionDelay = (k * 60) + 'ms'; p.classList.add('melt'); });
+  el.dlines.innerHTML = ''; el.dctl.hidden = true; el.deriv.hidden = false;
+  await wait(380 + ps.length * 60);
+  for (let k = 0; k < lines.length; k++) {
+    const ln = document.createElement('div');
+    ln.className = 'ln' + (lines[k].text ? ' txt' : '');
+    if (lines[k].text) ln.textContent = lines[k].text; else ln.appendChild(mj(lines[k].tex, true));
+    [...el.dlines.children].forEach(c => c.classList.add('old'));
+    el.dlines.appendChild(ln);
+    while (el.dlines.children.length > 3) el.dlines.firstElementChild.remove();
+    if (k < lines.length - 1) await wait(k === 0 ? 1000 : 1100);
+  }
+  await wait(450);
+  if (ok) {
+    const q = document.createElement('span'); q.className = 'qed'; q.textContent = '∎';
+    el.dlines.lastElementChild.appendChild(q);
+    S.solved.add(S.li); saveSolved(); renderHead();
+    el.dbtn.textContent = S.li < LEVELS.length - 1 ? '다음 문제' : '처음부터';
+    el.dbtn.dataset.act = 'next';
+  } else { el.dbtn.textContent = '다시'; el.dbtn.dataset.act = 'back'; }
+  el.dctl.hidden = false;
+  S.skip = true;
+  el.dbtn.focus({ preventScroll: true });
+}
+el.deriv.addEventListener('click', e => {
+  if (e.target.closest('.dctl')) return;
+  if (!S.skip) { S.skip = true; S.cancelWait && S.cancelWait(); }
+});
+el.dbtn.addEventListener('click', () => {
+  if (el.dbtn.dataset.act === 'next') loadLevel((S.li + 1) % LEVELS.length);
+  else { el.deriv.hidden = true; S.busy = false; renderBoard(); }
+});
+$('eqb').addEventListener('click', solve);
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.target.closest('button')) return;
+  if (!el.deriv.hidden) { if (!el.dctl.hidden) el.dbtn.click(); else el.deriv.click(); return; }
+  solve();
+});
+let rz;
+window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { const c = cell; computeCell(); if (c !== cell && !S.busy) render(); }, 120); });
+
+/* ---------- boot ---------- */
+let booted = false;
+const mathReady = new Promise(res => { window.__mjReady = res; setTimeout(res, 6000); });
+function start(data) {
+  mathReady.then(() => {
+    if (booted) return; booted = true;
+    const li = data && Number.isInteger(data.li) ? data.li : 0;
+    loadLevel(li, data && data.place);
+  });
+}
+window.claude?.hot?.snapshot?.(() => ({ li: S.li, place: S.place }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
