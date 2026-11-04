@@ -88,8 +88,3 @@ mjx-assistive-mml{position:absolute!important;width:1px!important;height:1px!imp
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
-
-/* 추가: 자리 맞바꾸기, 첨자 크기 전환 */
-.piece.slide{transition:left .25s ease,top .25s ease}
-.ghost-form{animation:formin .16s ease-out}
-@keyframes formin{0%{scale:.8}100%{scale:1}}

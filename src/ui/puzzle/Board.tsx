@@ -1,10 +1,18 @@
-import { useEffect, useState, type PointerEvent, type RefObject } from 'react'
+import { useEffect, useRef, useState, type ComponentProps, type PointerEvent, type RefObject } from 'react'
 import { absCells, COLS, edges, ROWS, slotDef } from '../../core/puzzle/geometry'
 import type { Cell, Level } from '../../core/puzzle/pieces'
 import { useGame } from '../game'
 import { Derivation } from './Derivation'
 import { Piece } from './Piece'
 import type { DragView } from './usePieceDrag'
+import { useMorph } from './useMorph'
+
+/** 판 위 조각. 자리 맞바꾸기로 밀려나면(morph가 바뀌면) 새 자리·크기로 부드럽게 옮겨 간다. */
+function BoardPiece({ morph, ...props }: ComponentProps<typeof Piece> & { morph: number | null }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useMorph(ref, morph)
+  return <Piece {...props} elRef={ref} />
+}
 
 type Props = {
   level: Level
@@ -30,15 +38,6 @@ export function Board({ level: L, cell, boardRef, drag, onPointerDown }: Props) 
     return () => clearTimeout(t)
   }, [bad])
   const badIds = bad && bad.n !== expired ? bad.ids : []
-
-  // 자리 맞바꾸기로 밀려난 조각은 새 자리로 미끄러진다
-  const [slid, setSlid] = useState(0)
-  useEffect(() => {
-    if (!slide) return
-    const t = setTimeout(() => setSlid(slide.n), 300)
-    return () => clearTimeout(t)
-  }, [slide])
-  const slideId = slide && slide.n !== slid ? slide.id : null
 
   const W = COLS * cell, H = ROWS * cell
   const onboard = L.pieces.filter(d => place[d.id])
@@ -73,10 +72,10 @@ export function Board({ level: L, cell, boardRef, drag, onPointerDown }: Props) 
             if (badIds.includes(d.id)) cls.push('bad')
             if (flash?.id === d.id) cls.push('flash')
             if (derivation) cls.push('melt')
-            if (slideId === d.id) cls.push('slide')
             return (
-              <Piece
+              <BoardPiece
                 key={`${d.id}:${flash?.id === d.id ? flash.n : 0}`}
+                morph={slide?.id === d.id ? slide.n : null}
                 def={slotDef(d, place[d.id])}
                 cell={cell}
                 className={cls.join(' ')}

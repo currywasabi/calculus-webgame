@@ -87,13 +87,13 @@ export function engineSuite(name: string, levels: Level[]) {
       expect(r.ok).toBe(false)
     })
     test('레벨 8: 구간 뒤집힘 → -√π, 오답', () => {
-      const r = solved(levels[7], { a: [2, 2], b: [3, 6], c: [3, 2], d: [3, 3], f: [5, 2, 'script'], g: [7, 3] })
+      const r = solved(levels[7], { a: [2, 2], b: [3, 6], c: [3, 2], d: [3, 3], f: [5, 1, 'script'], g: [7, 3] })
       expect(r.lines.at(-1)).toBe('-\\sqrt{\\pi }')
       expect(fmt(r.val)).toBe('-1.7725')
       expect(r.ok).toBe(false)
     })
     test('레벨 8: 아래끝 없음', () => {
-      expect(run(levels[7], { a: [2, 2], b: [3, 2], d: [3, 3], f: [5, 2, 'script'], g: [7, 3] }))
+      expect(run(levels[7], { a: [2, 2], b: [3, 2], d: [3, 3], f: [5, 1, 'script'], g: [7, 3] }))
         .toEqual({ error: { msg: '적분 구간이 없다.', ids: ['a'] } })
     })
   })

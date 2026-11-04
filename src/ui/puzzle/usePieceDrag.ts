@@ -26,9 +26,9 @@ export function usePieceDrag(boardRef: RefObject<HTMLElement | null>, cell: numb
     if (s.busy || drag.current) return
     e.preventDefault()
     const r = e.currentTarget.getBoundingClientRect()
-    // 첨자 크기 조각을 잡으면 본문 크기의 아랫줄을 잡은 것으로 본다 (아랫줄 유지 규칙과 맞춤)
+    // 첨자 크기 조각을 잡으면 아랫줄을 맞춘 본문 크기 조각을 잡은 것으로 본다 (아랫줄 유지 규칙과 맞춤)
     const d = LEVELS[s.li].pieces.find(q => q.id === id)!
-    const lift = s.place[id]?.[2] === 'script' ? (d.h - 1) * cellRef.current : 0
+    const lift = s.place[id]?.[2] === 'script' && d.script ? (d.h - d.script.h) * cellRef.current : 0
     drag.current = { id, x0: e.clientX, y0: e.clientY, gx: e.clientX - r.left, gy: e.clientY - r.top + lift, moved: false, px: 0, py: 0, snap: null }
   }, [])
 

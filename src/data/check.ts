@@ -1,8 +1,8 @@
 import { C } from '../core/math/complex'
 import { close, N } from '../core/math/evaluate'
 import { isParseError, parseRegion } from '../core/math/parse2d'
-import { canPlace, placedList, slotDef, type Placement } from '../core/puzzle/geometry'
-import { scriptRow } from '../core/puzzle/drop'
+import { scriptSlot } from '../core/puzzle/drop'
+import { canPlace, placedList, sameSlot, slotDef, type Placement } from '../core/puzzle/geometry'
 import type { Level } from '../core/puzzle/pieces'
 
 /** 스키마를 통과한 레벨의 의미 검사. 문제가 없으면 빈 배열. */
@@ -20,10 +20,12 @@ export function checkLevel(L: Level): string[] {
   // 첨자 크기 자리는 드래그로 만들 수 있는 자리여야 한다 (첨자 자리 규칙)
   for (const d of L.pieces) {
     const s = L.sol[d.id]
-    if (s[2] !== 'script') continue
+    if (s[2] !== 'script' || !d.script) continue
     const others = { ...L.sol }
     delete others[d.id]
-    if (scriptRow(L.pieces, others, d, s[0], s[1] - (d.h - 1)) !== s[1]) errors.push(`조각 ${d.id}의 첨자 크기 자리가 첨자 자리 규칙에 맞지 않는다.`)
+    // 첨자 자리의 아랫줄에 본문 크기 조각의 아랫줄을 맞춘 스냅
+    const bottom = s[1] + d.script.h - 1
+    if (!sameSlot(scriptSlot(L.pieces, others, d, s[0], bottom - (d.h - 1)) ?? undefined, s)) errors.push(`조각 ${d.id}의 첨자 크기 자리가 첨자 자리 규칙에 맞지 않는다.`)
   }
   if (errors.length) return errors
 

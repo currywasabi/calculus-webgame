@@ -20,8 +20,8 @@ type Base = {
   /** 라벨 대신 그리는 선 */
   draw?: 'bar' | 'root'
   aria?: string
-  /** 첨자 크기가 있는 조각: 첨자일 때의 라벨 글자 크기. 첨자 크기는 같은 너비, 높이 1, 기준선 0 */
-  script?: number
+  /** 첨자 크기가 있는 조각의 첨자 크기 (scriptOf) */
+  script?: { w: number; h: number; em: number }
 }
 
 export type NumPiece = Base & { kind: 'num'; v: number }
@@ -35,10 +35,14 @@ export type PieceKind = PieceDef['kind']
 
 export const rect = (w: number, h: number) => { const c: Cell[] = []; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) c.push([x, y]); return c }
 
+/** 첨자 크기: 높이와 글자는 2/3, 너비는 단일 기호면 1열, 아니면 2/3 (올림) */
+const scriptOf = (w: number, h: number, em: number, single: boolean) =>
+  ({ w: single ? 1 : Math.ceil(w * 2 / 3), h: Math.round(h * 2 / 3), em: em * 2 / 3 })
+
 /** 조각 생성 함수 (원본 P) */
 export const P = {
-  num: (id: string, v: number): PieceDef => ({ id, kind: 'num', v, tex: String(v), w: 2, h: 3, axis: 1, em: 1.6, script: .92 }),
-  con: (id: string, c: ConstName): PieceDef => ({ id, kind: 'const', c, tex: { e: 'e', 'π': '\\pi', i: 'i' }[c], w: 2, h: 3, axis: 1, em: 1.6, script: .92 }),
+  num: (id: string, v: number): PieceDef => ({ id, kind: 'num', v, tex: String(v), w: 2, h: 3, axis: 1, em: 1.6, script: scriptOf(2, 3, 1.6, String(v).length === 1) }),
+  con: (id: string, c: ConstName): PieceDef => ({ id, kind: 'const', c, tex: { e: 'e', 'π': '\\pi', i: 'i' }[c], w: 2, h: 3, axis: 1, em: 1.6, script: scriptOf(2, 3, 1.6, true) }),
   op: (id: string, op: OpSymbol): PieceDef => ({ id, kind: 'op', op, tex: { '+': '+', '−': '-', '×': '\\times' }[op], w: 1, h: 1, axis: 0, em: .9 }),
   lp: (id: string): PieceDef => ({ id, kind: 'lp', tex: '(', w: 1, h: 3, axis: 1, fit: .82 }),
   rp: (id: string): PieceDef => ({ id, kind: 'rp', tex: ')', w: 1, h: 3, axis: 1, fit: .82 }),
@@ -50,7 +54,7 @@ export const P = {
   },
   int: (id: string): PieceDef => ({ id, kind: 'int', tex: '\\displaystyle\\int', w: 1, h: 5, axis: 2, fit: .9 }),
   inf: (id: string, s: number): PieceDef => ({ id, kind: 'inf', sign: s, tex: s > 0 ? '\\infty' : '-\\infty', w: 2, h: 1, axis: 0, em: .92 }),
-  nsq: (id: string): PieceDef => ({ id, kind: 'negsq', tex: '-x^{2}', w: 3, h: 3, axis: 1, em: 1.5, script: .92 }),
+  nsq: (id: string): PieceDef => ({ id, kind: 'negsq', tex: '-x^{2}', w: 3, h: 3, axis: 1, em: 1.5, script: scriptOf(3, 3, 1.5, false) }),
   dx: (id: string): PieceDef => ({ id, kind: 'dx', tex: 'dx', w: 2, h: 3, axis: 1, em: 1.3 }),
 }
 
@@ -84,10 +88,11 @@ export function buildPiece(s: PieceSpec): PieceDef {
 /** 판 위 조각의 크기. 없으면 본문 크기 */
 export type Form = 'script'
 
-/** 조각 정의를 주어진 크기로 */
+/** 조각 정의를 주어진 크기로. 기준선은 본문과 같은 규칙(가운데 행, 짝수면 위쪽) */
 export function inForm(d: PieceDef, form?: Form): PieceDef {
   if (form !== 'script' || !d.script) return d
-  return { ...d, h: 1, axis: 0, em: d.script }
+  const { w, h, em } = d.script
+  return { ...d, w, h, axis: Math.floor((h - 1) / 2), em }
 }
 
 /** 판 위 자리: [x, y] 또는 첨자 크기 [x, y, 'script'] (x, y는 바운딩 박스 왼쪽 위 칸) */

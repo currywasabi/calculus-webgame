@@ -1,4 +1,4 @@
-import { memo, type CSSProperties, type PointerEvent } from 'react'
+import { memo, type CSSProperties, type PointerEvent, type Ref } from 'react'
 import { cellsOf, edges } from '../../core/puzzle/geometry'
 import type { PieceDef } from '../../core/puzzle/pieces'
 import { MathSvg } from '../math/MathSvg'
@@ -10,14 +10,17 @@ type Props = {
   className?: string
   style?: CSSProperties
   onPointerDown?: (id: string, e: PointerEvent<HTMLDivElement>) => void
+  /** 바깥 요소 (모양 전환 연출용) */
+  elRef?: Ref<HTMLDivElement>
 }
 
-export const Piece = memo(function Piece({ def: d, cell, className, style, onPointerDown }: Props) {
+export const Piece = memo(function Piece({ def: d, cell, className, style, onPointerDown, elRef }: Props) {
   const W = d.w * cell, H = d.h * cell
   const { o, f } = edges(cellsOf(d), cell)
   const sw = Math.max(1.6, cell * .075)
   return (
     <div
+      ref={elRef}
       className={'piece k-' + d.kind + (className ? ' ' + className : '')}
       data-id={d.id}
       style={{ width: W + 'px', height: H + 'px', ...style }}
